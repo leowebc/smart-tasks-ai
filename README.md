@@ -1,60 +1,271 @@
-# Atenção
-Não crie PR ou faça commit neste repositório. Faça o download do skeleton, implemente sua solução, coloque no seu github e compartilhe conosco uma PR para revisão do código, em seguida iremos entrar em contato para uma segunda conversa para que nos explique o seu código.
+# Smart Tasks AI
 
-# Requisitos para Teste Técnico de Desenvolvedor AGU
-## Descrição do Projeto
-Você será responsável por desenvolver uma aplicação simples de gerenciamento de tarefas (To-Do List) que permita ao usuário adicionar, editar, remover e listar tarefas. A aplicação deverá ser desenvolvida utilizando a stack especificada. A interface deve ser intuitiva e responsiva. A comunicação entre o frontend e o backend deve ser realizada via REST API.
-Este teste pode ser melhorado, porém é necessário que seja respeitado as tecnologias listas.
+> Gestão de tarefas com autenticação JWT e uma base de conhecimento privada formada por documentos e páginas web escolhidos pelo usuário.
 
-## Requisitos Funcionais
-### Autenticação:
+O Smart Tasks AI combina uma aplicação de tarefas com upload, Web Scraping sob demanda e chat RAG. Cada conta acessa somente suas próprias tarefas e fontes. O Chat responde com base nos trechos selecionados e não realiza pesquisa automática na internet.
 
-O usuário deve ser capaz de se autenticar utilizando JWT.
-A autenticação deve ser implementada no backend com PHP e Symfony.
+## Tecnologias
 
-### Gerenciamento de Tarefas:
+### Backend
 
-- Adicionar uma nova tarefa.
-- Editar uma tarefa existente.
-- Remover uma tarefa.
-- Listar todas as tarefas.
-  As tarefas devem ser armazenadas em um banco de dados MySQL.
+- PHP 8.1 e Symfony 6;
+- Doctrine ORM, Doctrine Migrations e MySQL 8;
+- LexikJWTAuthenticationBundle para autenticação stateless;
+- `smalot/pdfparser` para extração de PDFs;
+- API da OpenAI para embeddings e geração da resposta.
 
-### Interface de Usuário:
+### Frontend
 
-- Desenvolver a interface em Angular 17.
-- Utilizar Angular Material ou PrimeNG para componentes UI.
-- Implementar formulários reativos com Angular Forms.
-- Utilizar NgRx para gerenciamento de estado.
-- Requisitos Não Funcionais
+- Angular 17 e TypeScript 5.4;
+- Angular Material, SCSS e Reactive Forms;
+- NgRx Store e Effects para o estado do CRUD de tarefas;
+- interceptor HTTP para envio do Bearer Token;
+- RxJS e SweetAlert2.
 
-## Tecnologias Utilizadas
-### Frontend:
+## Funcionalidades implementadas
 
-- Angular 17
-- Rxjs ou Ngrx ou Signals
-- TypeScript 5.4/5.5
-- SASS
-- HTML 5.2
-- CSS 2.1
-- JWT
-- WebSocket/SSE (opcional)
+- cadastro e login com senha protegida e emissão de JWT;
+- rotas privadas no Angular e API protegida, exceto cadastro e login;
+- CRUD de tarefas isolado por usuário, com título obrigatório e descrição opcional;
+- dashboard e interface responsiva para tarefas;
+- upload de PDF e TXT, listagem, exclusão e reprocessamento de falhas;
+- extração, divisão em chunks, geração de embeddings e persistência no MySQL;
+- importação de uma página web ou navegação por links do mesmo site;
+- agrupamento das páginas de uma importação;
+- chat RAG com seleção explícita de documentos e páginas;
+- resposta com fontes, trechos e indicação de insuficiência de contexto;
+- exclusão de documentos, páginas e grupos pertencentes ao usuário.
 
-### Backend:
+## Arquitetura
 
-- PHP 8.1
-- Symfony 6.0
-    - DTO
-    - Services
-- Doctrine
-- MySQL
-- Redis (opcional)
-- ElasticSearch/OpenSearch (opcional)
-- RabbitMQ (opcional)
-- WebSocket/SSE (opcional)
-- JWT
-- Certificados X509 (opcional)
+```text
+Angular 17
+   |
+   | HTTP + JWT
+   v
+Controllers REST do Symfony
+   |
+   v
+Services de aplicação
+   |
+   +--> Repositories / Doctrine --> MySQL
+   +--> extração e chunking
+   +--> OpenAI (embeddings e chat)
+```
 
-## Banco de dados
+O backend separa Controllers, DTOs, Services, Repositories e Entities. Os Controllers validam a entrada HTTP e delegam as regras; os Services coordenam autenticação, tarefas, upload, indexação, scraping e RAG; os Repositories concentram o acesso ao Doctrine.
+
+As entidades persistidas são `User`, `Task`, `Document`, `DocumentChunk` e `SourceImport`. Consultas e alterações sempre consideram o usuário autenticado. Recursos de outra conta são tratados como não encontrados.
+
+No frontend, o NgRx controla as tarefas. Autenticação, documentos, fontes e chat usam serviços HTTP específicos; o token fica no `localStorage` e é anexado pelo interceptor apenas às chamadas da API local.
+
+## RAG fechado
+
+O endpoint `POST /api/chat` recebe somente `question` e `source_ids`. O fluxo é:
+
+1. validar a pergunta, a propriedade e o status das fontes;
+2. gerar o embedding da pergunta com o mesmo modelo usado na indexação;
+3. percorrer todos os chunks das fontes selecionadas em lotes;
+4. calcular similaridade de cosseno e manter os cinco melhores trechos;
+5. descartar candidatos abaixo do limiar configurado;
+6. enviar ao LLM somente a pergunta e os trechos recuperados;
+7. devolver resposta, fontes e excertos utilizados.
+
+O prompt proíbe conhecimento geral, links inventados e instruções encontradas dentro do conteúdo recuperado. Quando os trechos não sustentam a resposta, a API retorna:
+
+> Não encontrei informações suficientes nas fontes selecionadas para responder a essa pergunta.
+>
+> Você pode adicionar novos documentos ou importar mais conteúdo pelo Web Scraping.
+
+**O Chat não possui provedor de busca web e não faz pesquisa automática na internet.** Uma página só entra na base depois que o usuário solicita sua importação.
+
+## Upload e Web Scraping
+
+### Upload
+
+- aceita arquivos PDF e TXT de 1 byte a 10 MB;
+- valida extensão e MIME type;
+- exige texto UTF-8 em TXT;
+- extrai somente texto selecionável de PDF; não há OCR;
+- armazena os arquivos em `backend/var/documents`, fora do Git;
+- usa chunks de até 800 caracteres, com sobreposição de 150;
+- só marca o documento como `ready` após validar todos os embeddings;
+- mantém falhas com mensagem segura e permite reprocessamento.
+
+### Web Scraping
+
+- aceita apenas URLs HTTP ou HTTPS sem credenciais;
+- bloqueia hosts e endereços IP privados ou reservados para reduzir SSRF;
+- revalida os endereços durante redirecionamentos;
+- exige resposta HTML, limita cada página a 1 MB e aceita até três redirecionamentos;
+- consulta as regras de `robots.txt` quando o arquivo está disponível;
+- remove scripts, navegação e outros elementos de interface;
+- preserva títulos, listas, tabelas, definições e blocos de código como texto estruturado;
+- pode seguir links do mesmo site até o limite de 200 páginas;
+- não reindexa uma URL já cadastrada para o mesmo usuário;
+- registra a URL final na fonte e nos metadados de cada chunk.
+
+## Estrutura do repositório
+
+```text
+backend/                 API Symfony
+  config/                segurança, Doctrine e injeção de dependências
+  migrations/            evolução do schema de documentos e fontes
+  src/Controller/        endpoints REST
+  src/Service/           regras de aplicação, indexação, scraping e RAG
+frontend/                SPA Angular 17
+database/task_app_ddl.sql schema base de usuários e tarefas
+docs/specs/              decisões e validações das entregas
+docs/adr/                registro de arquitetura
+```
+
+## Instalação
+
+### Pré-requisitos
+
+- PHP 8.1 ou compatível, Composer e extensões `curl`, `dom`, `fileinfo`, `mbstring` e `pdo_mysql`;
+- MySQL 8;
+- Node.js compatível com Angular 17 e npm;
+- OpenSSL para as chaves JWT;
+- chave de API da OpenAI para indexação e chat.
+
+### Banco de dados
+
 Em um MySQL vazio, crie o banco e execute `database/task_app_ddl.sql`. Depois, no diretório `backend`, com `DATABASE_URL` nesse banco, rode `php bin/console doctrine:migrations:migrate --no-interaction`.
-Essa ordem foi validada em 02/10/2026 num banco temporário: as três migrations criaram `documents`, `document_chunks` e `source_imports` sobre `users` e `tasks`. O banco `task_app` não foi alterado. Copie `backend/.env.example` para `backend/.env.local` e preencha os valores reais.
+
+Exemplo sem credenciais reais, executado a partir da raiz:
+
+```bash
+mysql -u SEU_USUARIO -p -e "CREATE DATABASE task_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u SEU_USUARIO -p task_app < database/task_app_ddl.sql
+```
+
+Essa ordem foi validada em 02/10/2026 num banco temporário: as três migrations criaram `documents`, `document_chunks` e `source_imports` sobre `users` e `tasks`. O banco `task_app` local não foi alterado durante essa validação.
+
+### Backend
+
+```bash
+cd backend
+cp .env.example .env.local
+composer install
+php bin/console lexik:jwt:generate-keypair
+php bin/console doctrine:migrations:migrate --no-interaction
+php -S 127.0.0.1:9000 -t public public/index.php
+```
+
+Antes de gerar as chaves ou executar migrations, preencha `backend/.env.local`. A pasta `backend/config/jwt` e o arquivo local de ambiente são ignorados pelo Git.
+
+### Frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+A aplicação fica em `http://localhost:4200` e os serviços Angular apontam para `http://localhost:9000/api`. O CORS do backend permite as origens locais nas portas configuradas.
+
+## SQL e Doctrine Migrations
+
+O arquivo `database/task_app_ddl.sql` cria as tabelas base:
+
+- `users`;
+- `tasks`.
+
+As migrations devem ser aplicadas depois do DDL:
+
+- `Version20261002180000`: cria `documents` e `document_chunks`;
+- `Version20261002210000`: adiciona `source_url` aos documentos;
+- `Version20261002223000`: cria `source_imports` e relaciona suas páginas.
+
+Os embeddings são armazenados em JSON junto com o modelo e os metadados da origem. Arquivos enviados permanecem no filesystem e não são gravados no repositório.
+
+## Variáveis de ambiente
+
+Use `backend/.env.example` como modelo e mantenha os valores reais somente em `backend/.env.local`.
+
+- `APP_ENV`: ambiente do Symfony;
+- `APP_SECRET`: segredo interno da aplicação;
+- `JWT_SECRET_KEY`: caminho da chave privada JWT;
+- `JWT_PUBLIC_KEY`: caminho da chave pública JWT;
+- `JWT_PASSPHRASE`: senha das chaves JWT;
+- `DATABASE_URL`: conexão com o MySQL;
+- `OPENAI_API_KEY`: credencial usada por embeddings e chat;
+- `EMBEDDING_MODEL`: modelo de embeddings;
+- `CHAT_MODEL`: modelo de chat.
+
+Não versione `.env`, `.env.local`, chaves PEM, credenciais ou arquivos enviados.
+
+## REST API
+
+`POST /api/register` e `POST /api/login` são públicos. Todos os demais endpoints exigem `Authorization: Bearer <jwt>`.
+
+### Autenticação
+
+- `POST /api/register` — cria uma conta com `username` e `password`;
+- `POST /api/login` — autentica pelo `json_login` e devolve o JWT.
+
+### Tarefas
+
+- `GET /api/tasks` — lista as tarefas da conta;
+- `POST /api/tasks` — cria uma tarefa;
+- `PUT /api/tasks/{id}` — altera título e descrição;
+- `DELETE /api/tasks/{id}` — exclui uma tarefa.
+
+### Documentos
+
+- `GET /api/documents` — lista uploads;
+- `POST /api/documents` — recebe `multipart/form-data` no campo `file`;
+- `GET /api/documents/{id}` — detalha um documento;
+- `DELETE /api/documents/{id}` — exclui um upload;
+- `POST /api/documents/{id}/retry` — reprocessa um upload com falha.
+
+### Fontes web
+
+- `GET /api/sources` — lista páginas avulsas e importações agrupadas;
+- `POST /api/sources` — importa `url` e aceita `follow_links`;
+- `DELETE /api/sources/{id}` — exclui uma página;
+- `POST /api/sources/{id}/retry` — reprocessa uma página com falha;
+- `DELETE /api/source-imports/{id}` — exclui uma importação inteira.
+
+### Chat
+
+- `POST /api/chat` — responde a `question` usando exclusivamente os `source_ids` selecionados.
+
+## Validações executadas
+
+Os resultados detalhados estão em `docs/specs`.
+
+- `php bin/console lint:container`: concluído sem erros;
+- `php bin/console debug:router`: as 17 rotas sob `/api` foram carregadas;
+- `npm run build`: concluído; restaram avisos de orçamento de estilos e dependência CommonJS;
+- autenticação: login válido `200`, senha inválida `401` e rota protegida sem JWT `401`;
+- tarefas: CRUD exercitado com duas contas, incluindo isolamento, título inválido `400` e recurso alheio `404`;
+- upload: arquivo inválido `400`, ausência de JWT `401` e acesso por outra conta `404`;
+- scraping: página do manual do PHP importada com URL e embeddings persistidos; uma página validada gerou 49 chunks de 1536 dimensões;
+- RAG: uma importação com 198 páginas e 1.997 chunks recuperou conteúdo além dos primeiros 300 chunks;
+- insuficiência: pergunta sem suporte retornou `sufficient: false`, sem fontes ou trechos e sem chamada a busca web.
+
+Não há, neste repositório, uma suíte automatizada completa de integração do backend ou testes end-to-end. Os arquivos `*.spec.ts` do Angular cobrem componentes e serviços básicos, mas o histórico de validação não registra uma execução completa do Karma.
+
+## Limitações conhecidas
+
+- embeddings e respostas dependem da OpenAI e de conectividade externa;
+- indexação e scraping são síncronos; importações grandes mantêm a requisição aberta;
+- embeddings ficam em JSON no MySQL e a similaridade é calculada em PHP, sem banco vetorial;
+- PDFs digitalizados sem texto selecionável exigiriam OCR, que não foi implementado;
+- a URL da API e as origens CORS estão configuradas para o ambiente local;
+- o histórico do Chat não é persistido e se perde ao recarregar a aplicação;
+- tarefas não possuem estado de concluída porque o DDL original não inclui essa coluna;
+- as telas “Bases” e “Configurações” são placeholders;
+- Redis e RabbitMQ permanecem no Compose, mas não participam do fluxo da aplicação;
+- o Compose não entrega o frontend nem substitui o fluxo local validado;
+- não existe busca automática na internet durante uma conversa.
+
+## Skeletons do desafio
+
+Este projeto partiu dos skeletons de backend PHP/Symfony e frontend Angular fornecidos pelo avaliador para o teste técnico de Desenvolvedor AGU. Eles serviram somente como base inicial.
+
+Este repositório contém a evolução independente solicitada pelo desafio. Os repositórios originais não são remotos, submódulos ou dependências da solução.
