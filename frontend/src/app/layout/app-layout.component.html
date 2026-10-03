@@ -1,0 +1,16 @@
+<div class="shell" [class.shell--collapsed]="collapsed()" [class.shell--open]="mobileOpen()">
+  <app-sidebar [collapsed]="collapsed()" />
+  @if (mobileOpen()) {
+    <button type="button" class="shell__backdrop" (click)="closeMobile()" aria-label="Fechar menu"></button>
+  }
+  <div class="shell__main">
+    <app-header
+      [username]="username()"
+      [menuLabel]="menuLabel()"
+      (toggleMenu)="toggleMenu()"
+      (logout)="logout()" />
+    <main class="shell__content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

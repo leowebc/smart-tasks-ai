@@ -1,0 +1,100 @@
+<section class="login" aria-labelledby="register-title">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="orb orb-left" aria-hidden="true"></div>
+  <div class="orb orb-right" aria-hidden="true"></div>
+
+  <header class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="34" height="34">
+        <path fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"
+          d="M12 3.1 18.4 5.6v5.3c0 4.3-2.8 7.4-6.4 8.5-3.6-1.1-6.4-4.2-6.4-8.5V5.6L12 3.1z"/>
+        <path fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+          d="m8.8 12.1 2.1 2.1 4.4-4.5"/>
+      </svg>
+    </div>
+    <p class="product">Smart Tasks AI</p>
+    <h1 id="register-title">Crie sua conta</h1>
+    <p class="subtitle">Informe usuário e senha para continuar</p>
+  </header>
+
+  <div class="card">
+    <form [formGroup]="form" (ngSubmit)="register()" novalidate>
+      <label class="label" for="username">Usuário</label>
+      <mat-form-field class="field" appearance="fill" subscriptSizing="dynamic">
+        <span matPrefix class="prefix" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.7-8 4v1h16v-1c0-2.3-4.7-4-8-4z"/>
+          </svg>
+        </span>
+        <input matInput id="username" type="text" formControlName="username" autocomplete="username"
+          placeholder="seu usuário">
+        @if (form.controls.username.touched && form.controls.username.hasError('required')) {
+          <mat-error>Informe o usuário.</mat-error>
+        }
+        @if (form.controls.username.touched && form.controls.username.hasError('maxlength')) {
+          <mat-error>O usuário deve ter no máximo 50 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <label class="label" for="password">Senha</label>
+      <mat-form-field class="field" appearance="fill" subscriptSizing="dynamic">
+        <span matPrefix class="prefix" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-3 0H10V7a2 2 0 0 1 4 0z"/>
+          </svg>
+        </span>
+        <input matInput id="password" [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+          autocomplete="new-password" placeholder="sua senha">
+        <button mat-icon-button matSuffix type="button" class="toggle" (click)="togglePassword()"
+          [attr.aria-label]="hidePassword ? 'Mostrar senha' : 'Ocultar senha'"
+          [attr.aria-pressed]="!hidePassword">
+          @if (hidePassword) {
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor" d="M12 6c4.5 0 8.3 2.8 10 6-1.7 3.2-5.5 6-10 6S3.7 15.2 2 12c1.7-3.2 5.5-6 10-6zm0 2a4 4 0 1 0 4 4 4 4 0 0 0-4-4zm0 2.2A1.8 1.8 0 1 1 10.2 12 1.8 1.8 0 0 1 12 10.2z"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor" d="M3.3 2.5 2 3.8l3.2 3.2A12 12 0 0 0 2 12c1.7 3.2 5.5 6 10 6a11 11 0 0 0 4.3-.9l3.4 3.4 1.3-1.3zM12 16c-3.2 0-6.1-1.8-7.7-4 .7-1 1.7-1.9 2.8-2.6l1.7 1.7a4 4 0 0 0 5.1 5.1l1.5 1.5A9 9 0 0 1 12 16zm8.8-2.4-3.2-3.2 1.1-.6c.8.7 1.5 1.5 2 2.2-.6.8-1.3 1.6-2.1 2.2l-1.2-1.2zM9.7 6.4 8 4.7A11 11 0 0 1 12 4c4.5 0 8.3 2.8 10 6a12 12 0 0 1-2.2 3.1l-1.5-1.5A8 8 0 0 0 12 6a7 7 0 0 0-2.3.4z"/>
+            </svg>
+          }
+        </button>
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+          <mat-error>Informe a senha.</mat-error>
+        }
+      </mat-form-field>
+
+      <label class="label" for="confirmPassword">Confirmar senha</label>
+      <mat-form-field class="field" appearance="fill" subscriptSizing="dynamic">
+        <span matPrefix class="prefix" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-3 0H10V7a2 2 0 0 1 4 0z"/>
+          </svg>
+        </span>
+        <input matInput id="confirmPassword" [type]="hidePassword ? 'password' : 'text'" formControlName="confirmPassword"
+          autocomplete="new-password" placeholder="repita a senha">
+        @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
+          <mat-error>Confirme a senha.</mat-error>
+        }
+        @if (form.controls.confirmPassword.touched && form.hasError('passwordMismatch')) {
+          <mat-error>As senhas não coincidem.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (errorMessage) {
+        <p class="alert" role="alert">{{ errorMessage }}</p>
+      }
+
+      <button mat-flat-button type="submit" class="submit" [disabled]="submitting" [attr.aria-busy]="submitting">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.7-8 4v1h16v-1c0-2.3-4.7-4-8-4z"/>
+        </svg>
+        {{ submitting ? 'Cadastrando...' : 'Cadastrar' }}
+      </button>
+    </form>
+
+    <p class="divider"><span>ou</span></p>
+    <p class="register">Já tem uma conta? <a routerLink="/login">Faça login</a></p>
+  </div>
+
+  <p class="legal">Smart Tasks AI</p>
+</section>

@@ -1,0 +1,157 @@
+<section class="page chat">
+  <div class="chat__grid">
+    <section class="chat__main panel">
+      <header class="chat__toolbar">
+        <div class="assistant" aria-hidden="true">
+          <span class="assistant__eye"></span>
+          <span class="assistant__eye"></span>
+        </div>
+        <div class="chat__actions">
+          <button type="button" (click)="showHistory.set(!showHistory())">Histórico</button>
+          <button type="button" class="chat__new" (click)="newConversation()">Nova conversa</button>
+        </div>
+      </header>
+
+      @if (showHistory()) {
+        <ul class="chat__history">
+          @if (history().length === 0) {
+            <li>Nenhuma conversa gravada nesta sessão.</li>
+          }
+          @for (thread of history(); track $index) {
+            <li>
+              <button type="button" (click)="openHistory(thread)">{{ thread[0].content }}</button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="chat__log" #log [attr.aria-busy]="loading()">
+        @if (messages().length === 0 && !loading()) {
+          <p class="page__empty">Marque os uploads ou as páginas e faça uma pergunta.</p>
+        }
+        @for (message of messages(); track $index) {
+          <article class="bubble" [class.bubble--user]="message.role === 'user'" [class.bubble--assistant]="message.role === 'assistant'">
+            <p>{{ message.shown }}@if (message.role === 'assistant' && message.shown.length < message.content.length) {<span class="caret"></span>}</p>
+            @if (message.role === 'assistant' && message.sources.length > 0 && message.shown === message.content) {
+              <section class="sources">
+                <h3>Fontes</h3>
+                @for (group of message.sources; track group.key) {
+                  <article>
+                    <p class="sources__origin">{{ originLabel(group.origin) }}</p>
+                    <strong>{{ group.name }}</strong>
+                    @if (group.url) {
+                      <a [href]="group.url" target="_blank" rel="noopener noreferrer">{{ group.url }}</a>
+                    }
+                    <ul>
+                      @for (snippet of group.snippets; track snippet.chunkIndex) {
+                        <li>
+                          <span>Trecho {{ snippet.chunkIndex }}</span>
+                          <p>{{ snippet.text }}</p>
+                        </li>
+                      }
+                    </ul>
+                  </article>
+                }
+              </section>
+            }
+          </article>
+        }
+        @if (loading()) {
+          <p class="page__status" aria-live="polite">Respondendo...</p>
+        }
+      </div>
+
+      <form class="chat__form" (submit)="$event.preventDefault(); send()">
+        <textarea
+          name="question"
+          rows="3"
+          maxlength="1000"
+          [placeholder]="selected().length === 0 ? 'Selecione pelo menos uma fonte para perguntar...' : 'Pergunte sobre as fontes marcadas'"
+          [(ngModel)]="question"
+          [disabled]="loading()"></textarea>
+        <button type="submit" [disabled]="loading() || selected().length === 0 || question.trim() === ''">Enviar</button>
+      </form>
+      @if (errorMessage()) {
+        <p class="page__alert" role="alert">{{ errorMessage() }}</p>
+      }
+    </section>
+
+    <aside class="chat__side">
+      <section class="panel">
+        <h2>Uploads</h2>
+        <p>Selecione para incluir na consulta.</p>
+        @if (loadingSources() && documents().length === 0) {
+          <p class="page__status">Carregando...</p>
+        } @else if (documents().length === 0) {
+          <p class="page__empty">Nenhum upload pronto.</p>
+        } @else {
+          <ul class="pick-list">
+            @for (document of documents(); track document.id) {
+              <li>
+                <label>
+                  <input type="checkbox" [checked]="checked(document.id)" (change)="toggle(document.id)">
+                  <span>
+                    <strong>{{ document.original_name }}</strong>
+                    <small>{{ formatSize(document.size_bytes) }} · {{ document.chunk_count }} trechos</small>
+                  </span>
+                </label>
+                <button type="button" (click)="removeDocument(document)">Excluir</button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="panel">
+        <h2>Web Scraping</h2>
+        <p>Selecione para incluir na consulta.</p>
+        @if (groups().length === 0 && sources().length === 0) {
+          <p class="page__empty">Nenhuma página pronta.</p>
+        } @else {
+          <ul class="pick-list">
+            @for (group of groups(); track group.id) {
+              <li>
+                <label>
+                  <input #box type="checkbox" [checked]="markGroup(box, group)" [disabled]="readyIds(group).length === 0" (change)="toggleGroup(group)">
+                  <span>
+                    <strong>{{ group.title }}</strong>
+                    <small>{{ group.page_count }} páginas · {{ group.chunk_count }} trechos</small>
+                  </span>
+                </label>
+                <button type="button" (click)="toggleOpen(group.id)">{{ expanded(group.id) ? 'Ocultar' : 'Páginas' }}</button>
+                <button type="button" (click)="removeGroup(group)">Excluir</button>
+                @if (expanded(group.id)) {
+                  <ul class="pages">
+                    @for (source of group.pages; track source.id) {
+                      <li>
+                        <label>
+                          <input type="checkbox" [checked]="checked(source.id)" [disabled]="source.status !== 'ready'" (change)="toggle(source.id)">
+                          <span>
+                            <strong>{{ source.original_name }}</strong>
+                            <small>{{ source.source_url }} · {{ source.chunk_count }} trechos</small>
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                }
+              </li>
+            }
+            @for (source of sources(); track source.id) {
+              <li>
+                <label>
+                  <input type="checkbox" [checked]="checked(source.id)" (change)="toggle(source.id)">
+                  <span>
+                    <strong>{{ source.original_name }}</strong>
+                    <small>1 página · {{ source.chunk_count }} trechos</small>
+                  </span>
+                </label>
+                <button type="button" (click)="removeSource(source)">Excluir</button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </aside>
+  </div>
+</section>

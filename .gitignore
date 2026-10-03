@@ -1,0 +1,45 @@
+# Dependencias
+vendor/
+node_modules/
+
+# Credenciais e ambiente local
+.env
+.env.local
+.env.*.local
+.env.local.php
+.env_example
+auth.json
+composer.auth.json
+
+# Chaves JWT e segredos
+*.pem
+*.key
+**/config/jwt/
+**/config/secrets/
+
+# Arquivos enviados nos testes
+backend/var/documents/
+
+# Logs, caches, dumps e temporarios
+backend/var/cache/
+backend/var/log/
+backend/var/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/tmp/
+*.log
+*.cache
+.phpunit.result.cache
+.phpunit.cache/
+*.tmp
+*.swp
+*.sql.gz
+*.dump
+dump.sql
+*.sqlite
+*.sqlite3
+
+# Sistema
+.DS_Store
+Thumbs.db

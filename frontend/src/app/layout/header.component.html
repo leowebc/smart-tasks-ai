@@ -1,0 +1,13 @@
+<header class="topbar">
+  <button type="button" class="topbar__menu" (click)="toggleMenu.emit()" [attr.aria-label]="menuLabel()">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+    </svg>
+  </button>
+
+  <div class="topbar__user">
+    <span class="topbar__avatar" aria-hidden="true">{{ username().slice(0, 1).toUpperCase() }}</span>
+    <span class="topbar__name">{{ username() }}</span>
+    <button type="button" class="topbar__logout" (click)="logout.emit()">Sair</button>
+  </div>
+</header>
