@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DocumentItem {
   id: number;
@@ -16,7 +17,7 @@ export interface DocumentItem {
   providedIn: 'root',
 })
 export class DocumentService {
-  private readonly apiUrl = 'http://localhost:9000/api/documents';
+  private readonly apiUrl = `${environment.apiUrl}/documents`;
 
   constructor(private readonly http: HttpClient) {}
 

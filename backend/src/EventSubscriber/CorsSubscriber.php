@@ -14,6 +14,7 @@ class CorsSubscriber implements EventSubscriberInterface
     private const ALLOWED_ORIGINS = [
         'http://localhost:4200',
         'http://127.0.0.1:4200',
+        'https://smart-tasks-ai.onrender.com',
     ];
 
     public static function getSubscribedEvents(): array
@@ -57,7 +58,7 @@ class CorsSubscriber implements EventSubscriberInterface
     private function apply(Request $request, Response $response): Response
     {
         $response->headers->set('Access-Control-Allow-Origin', (string) $request->headers->get('Origin'));
-        $response->headers->set('Vary', 'Origin', false);
+        $response->headers->set('Vary', 'Origin');
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         $response->headers->set('Access-Control-Max-Age', '3600');

@@ -1,30 +1,54 @@
-# Usando a imagem oficial do PHP 8.1
-FROM php:8.1-fpm
+FROM php:8.1-apache
 
-# Instalar extensões necessárias
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    && docker-php-ext-install pdo_mysql zip
+ENV APP_ENV=prod \
+    APP_DEBUG=0 \
+    PORT=10000 \
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    EMBEDDING_MODEL=text-embedding-3-small \
+    CHAT_MODEL=gpt-4o-mini \
+    JWT_SECRET_KEY=/var/www/html/config/jwt/private.pem \
+    JWT_PUBLIC_KEY=/var/www/html/config/jwt/public.pem
 
-# Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libcurl4-openssl-dev \
+        libonig-dev \
+        libxml2-dev \
+        libzip-dev \
+        unzip \
+    && docker-php-ext-install -j"$(nproc)" curl dom mbstring opcache pdo_mysql zip \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configurar o diretório de trabalho
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /var/www/html
 
-# Copiar arquivos da aplicação
+COPY composer.json composer.lock symfony.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --no-autoloader
+
 COPY . .
+COPY .env.example .env
 
-# Instalar dependências do Symfony
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer config --no-plugins allow-plugins.symfony/flex true
-RUN composer install
+RUN composer dump-autoload \
+    --no-dev \
+    --classmap-authoritative \
+    --no-interaction \
+    --no-scripts \
+    && mkdir -p var/cache var/log config/jwt \
+    && chown -R www-data:www-data var config/jwt
 
-# Expor a porta
-EXPOSE 9000
+COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/render-entrypoint.sh /usr/local/bin/render-entrypoint
+RUN chmod +x /usr/local/bin/render-entrypoint
 
-# Comando para iniciar o servidor
-CMD ["php-fpm"]
+EXPOSE 10000
+
+ENTRYPOINT ["render-entrypoint"]
+CMD ["apache2-foreground"]

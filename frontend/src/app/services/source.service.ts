@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SourceItem {
   id: number;
@@ -32,7 +33,7 @@ export interface SourceCatalog {
   providedIn: 'root',
 })
 export class SourceService {
-  private readonly apiUrl = 'http://localhost:9000/api/sources';
+  private readonly apiUrl = `${environment.apiUrl}/sources`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -57,6 +58,6 @@ export class SourceService {
   }
 
   removeGroup(id: number): Observable<{ status: string }> {
-    return this.http.delete<{ status: string }>(`http://localhost:9000/api/source-imports/${id}`);
+    return this.http.delete<{ status: string }>(`${environment.apiUrl}/source-imports/${id}`);
   }
 }

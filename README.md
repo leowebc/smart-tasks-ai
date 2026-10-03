@@ -167,6 +167,49 @@ npm start
 
 A aplicação fica em `http://localhost:4200` e os serviços Angular apontam para `http://localhost:9000/api`. O CORS do backend permite as origens locais nas portas configuradas.
 
+## Deploy de teste no Render
+
+### Backend
+
+Crie um Web Service Docker usando `backend` como diretório raiz. O container usa Apache, serve `backend/public` e escuta a porta informada pelo Render em `PORT`. O ambiente do container já assume `APP_ENV=prod` e `APP_DEBUG=0`.
+
+Cadastre no painel do Render, sem salvar valores reais no repositório:
+
+- `APP_SECRET`;
+- `DATABASE_URL`, no formato `mysql://USUARIO:SENHA@HOST:3306/BANCO?serverVersion=8.0&charset=utf8mb4`;
+- `JWT_PASSPHRASE`;
+- `JWT_PRIVATE_KEY_BASE64` e `JWT_PUBLIC_KEY_BASE64`;
+- `OPENAI_API_KEY`;
+- opcionalmente, `EMBEDDING_MODEL` e `CHAT_MODEL`.
+
+Para transportar as chaves JWT como variáveis de ambiente, gere o par localmente e codifique cada arquivo. Os resultados devem ser copiados diretamente para os campos secretos do Render:
+
+```bash
+cd backend
+php bin/console lexik:jwt:generate-keypair
+base64 -w 0 config/jwt/private.pem
+base64 -w 0 config/jwt/public.pem
+```
+
+O entrypoint decodifica as chaves somente dentro do container. Também é possível usar arquivos secretos e sobrescrever `JWT_SECRET_KEY` e `JWT_PUBLIC_KEY` com seus caminhos absolutos. Não execute migrations automaticamente ao iniciar cada instância.
+
+### Frontend
+
+A URL da API fica centralizada em:
+
+- `frontend/src/environments/environment.ts` para desenvolvimento;
+- `frontend/src/environments/environment.production.ts` para produção.
+
+A configuração de produção usa `/api` como fallback para uma implantação na mesma origem. No Static Site do Render, cadastre `API_URL` com a URL pública completa do backend, incluindo `/api`; o script `postbuild` grava essa configuração somente no bundle gerado, sem alterar os fontes Angular. O CORS do backend autoriza o frontend em `https://smart-tasks-ai.onrender.com`.
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Para um Static Site no Render, publique `frontend/dist/frontend/browser` e configure uma regra de rewrite de `/*` para `/index.html`, necessária para as rotas do Angular.
+
 ## SQL e Doctrine Migrations
 
 O arquivo `database/task_app_ddl.sql` cria as tabelas base:
@@ -180,6 +223,19 @@ As migrations devem ser aplicadas depois do DDL:
 - `Version20261002210000`: adiciona `source_url` aos documentos;
 - `Version20261002223000`: cria `source_imports` e relaciona suas páginas.
 
+Na primeira preparação do MySQL remoto, aplique o DDL base uma única vez a partir da raiz do projeto:
+
+```bash
+mysql -h HOST -P 3306 -u USUARIO -p BANCO < database/task_app_ddl.sql
+```
+
+Depois, no Shell do Web Service do Render, confira e execute as migrations com as variáveis de produção já configuradas:
+
+```bash
+php bin/console doctrine:migrations:status --env=prod
+php bin/console doctrine:migrations:migrate --no-interaction --env=prod
+```
+
 Os embeddings são armazenados em JSON junto com o modelo e os metadados da origem. Arquivos enviados permanecem no filesystem e não são gravados no repositório.
 
 ## Variáveis de ambiente
@@ -187,14 +243,18 @@ Os embeddings são armazenados em JSON junto com o modelo e os metadados da orig
 Use `backend/.env.example` como modelo e mantenha os valores reais somente em `backend/.env.local`.
 
 - `APP_ENV`: ambiente do Symfony;
+- `APP_DEBUG`: ativa ou desativa o modo de depuração;
 - `APP_SECRET`: segredo interno da aplicação;
 - `JWT_SECRET_KEY`: caminho da chave privada JWT;
 - `JWT_PUBLIC_KEY`: caminho da chave pública JWT;
 - `JWT_PASSPHRASE`: senha das chaves JWT;
+- `JWT_PRIVATE_KEY_BASE64`: chave privada codificada para o container;
+- `JWT_PUBLIC_KEY_BASE64`: chave pública codificada para o container;
 - `DATABASE_URL`: conexão com o MySQL;
 - `OPENAI_API_KEY`: credencial usada por embeddings e chat;
 - `EMBEDDING_MODEL`: modelo de embeddings;
 - `CHAT_MODEL`: modelo de chat.
+- `API_URL`: URL pública da API incorporada ao build de produção do frontend.
 
 Não versione `.env`, `.env.local`, chaves PEM, credenciais ou arquivos enviados.
 
@@ -256,7 +316,7 @@ Não há, neste repositório, uma suíte automatizada completa de integração d
 - indexação e scraping são síncronos; importações grandes mantêm a requisição aberta;
 - embeddings ficam em JSON no MySQL e a similaridade é calculada em PHP, sem banco vetorial;
 - PDFs digitalizados sem texto selecionável exigiriam OCR, que não foi implementado;
-- a URL da API e as origens CORS estão configuradas para o ambiente local;
+- o build de produção precisa receber `API_URL` quando a API usar um domínio diferente do padrão;
 - o histórico do Chat não é persistido e se perde ao recarregar a aplicação;
 - tarefas não possuem estado de concluída porque o DDL original não inclui essa coluna;
 - as telas “Bases” e “Configurações” são placeholders;
