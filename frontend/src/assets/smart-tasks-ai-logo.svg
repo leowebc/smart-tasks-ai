@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">Smart Tasks AI</title>
+  <defs>
+    <linearGradient id="tile" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="check" x1="28" y1="44" x2="98" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="url(#tile)"/>
+  <rect x="4.75" y="4.75" width="118.5" height="118.5" rx="29.25" fill="none" stroke="#a855f7" stroke-opacity=".22" stroke-width="1.5"/>
+  <path d="M29 65 51 87 94 42" fill="none" stroke="url(#check)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M101 19c1.4 8.2 5.8 12.6 14 14-8.2 1.4-12.6 5.8-14 14-1.4-8.2-5.8-12.6-14-14 8.2-1.4 12.6-5.8 14-14Z" fill="#4ade80"/>
+</svg>

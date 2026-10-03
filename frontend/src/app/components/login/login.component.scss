@@ -58,13 +58,12 @@
 .brand { text-align: center; }
 
 .logo {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 74px;
   height: 74px;
   margin: 0 auto 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #d946ef 0%, #7c3aed 48%, #3b82f6 100%);
+  border-radius: 18px;
+  object-fit: contain;
   box-shadow: 0 12px 32px rgba(76, 29, 149, 0.45);
 }
 

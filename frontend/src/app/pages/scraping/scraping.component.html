@@ -21,7 +21,7 @@
             <button type="submit" [disabled]="running() || url.trim() === ''">Adicionar</button>
           </label>
         </form>
-        <p class="composer__hint">A importação segue os links do mesmo domínio e grava tudo numa única fonte. A leitura começa em Iniciar Scraping.</p>
+        <p class="composer__hint">A importação segue links do mesmo domínio, processa até {{ maxPages }} páginas e grava tudo numa única fonte.</p>
       </section>
 
       @if (queue().length > 0) {
@@ -52,8 +52,9 @@
           <span class="job__badge" aria-hidden="true">↻</span>
           <h2>Processando Scraping</h2>
           <p class="job__line">[{{ currentIndex() + 1 }}/{{ queue().length }}] Lendo {{ currentUrl() }} ({{ elapsed() }}s)</p>
+          <p class="composer__hint">O percentual é estimado para até {{ maxPages }} páginas. A fonte aparecerá quando o servidor concluir.</p>
           <div class="job__head">
-            <span>Progresso</span>
+            <span>Progresso estimado</span>
             <strong>{{ progress() }}%</strong>
           </div>
           <div class="job__track" role="progressbar" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100">

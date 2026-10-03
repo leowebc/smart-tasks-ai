@@ -40,10 +40,11 @@ export class SourceService {
     return this.http.get<SourceCatalog>(this.apiUrl);
   }
 
-  add(url: string, followLinks = false): Observable<SourceItem | { pages: SourceItem[] }> {
+  add(url: string, followLinks = false, maxPages = 50): Observable<SourceItem | { pages: SourceItem[] }> {
     return this.http.post<SourceItem | { pages: SourceItem[] }>(this.apiUrl, {
       url,
       follow_links: followLinks,
+      max_pages: maxPages,
     });
   }
 

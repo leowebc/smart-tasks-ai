@@ -101,7 +101,7 @@ O prompt proíbe conhecimento geral, links inventados e instruções encontradas
 - consulta as regras de `robots.txt` quando o arquivo está disponível;
 - remove scripts, navegação e outros elementos de interface;
 - preserva títulos, listas, tabelas, definições e blocos de código como texto estruturado;
-- pode seguir links do mesmo site até o limite de 200 páginas;
+- pela tela, segue links do mesmo site até 50 páginas; a API aceita limites entre 1 e 200;
 - não reindexa uma URL já cadastrada para o mesmo usuário;
 - registra a URL final na fonte e nos metadados de cada chunk.
 

@@ -32,7 +32,7 @@ class WebSourceService
     }
 
     /** @return list<Document> */
-    public function importMany(User $owner, string $url, bool $followLinks): array
+    public function importMany(User $owner, string $url, bool $followLinks, int $maxPages = 50): array
     {
         $normalized = $this->guard->normalize($url);
         $policy = $this->robots->load($normalized);
@@ -49,7 +49,7 @@ class WebSourceService
         $title = '';
         $root = $normalized;
 
-        $maxPages = $followLinks ? 200 : 1;
+        $maxPages = $followLinks ? max(1, min(200, $maxPages)) : 1;
         while ($queue !== [] && count($collected) < $maxPages) {
             $current = array_shift($queue);
             if ($policy['readable'] && !$policy['allows']($current)) {

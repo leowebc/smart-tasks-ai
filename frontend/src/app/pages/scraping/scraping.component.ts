@@ -16,6 +16,7 @@ export class ScrapingComponent implements OnDestroy {
   private readonly dialogs = inject(DialogService);
   private progressTimer: ReturnType<typeof setInterval> | null = null;
 
+  readonly maxPages = 50;
   readonly groups = signal<SourceImport[]>([]);
   readonly pages = signal<SourceItem[]>([]);
   readonly openGroups = signal<number[]>([]);
@@ -184,7 +185,7 @@ export class ScrapingComponent implements OnDestroy {
     this.elapsed.set(0);
     this.progress.set(Math.round((index / urls.length) * 100));
     this.tickToward(index, urls.length);
-    this.sourcesApi.add(url, true).subscribe({
+    this.sourcesApi.add(url, true, this.maxPages).subscribe({
       next: (body) => {
         this.note(body);
         this.progress.set(Math.round(((index + 1) / urls.length) * 100));
@@ -204,7 +205,8 @@ export class ScrapingComponent implements OnDestroy {
     this.progressTimer = setInterval(() => {
       const seconds = Math.floor((Date.now() - started) / 1000);
       this.elapsed.set(seconds);
-      const simulated = Math.min(99, Math.round((seconds / 40) * 100));
+      const estimatedSeconds = this.maxPages * 3;
+      const simulated = Math.min(95, Math.round((seconds / estimatedSeconds) * 95));
       const base = (index / total) * 100;
       this.progress.set(Math.min(99, Math.round(base + simulated / total)));
     }, 400);

@@ -29,12 +29,16 @@ class WebSourceController extends AbstractController
         $payload = json_decode($request->getContent(), true);
         $url = is_array($payload) ? ($payload['url'] ?? null) : null;
         $followLinks = is_array($payload) && ($payload['follow_links'] ?? false) === true;
+        $maxPages = is_array($payload) ? ($payload['max_pages'] ?? 50) : 50;
         if (!is_string($url) || trim($url) === '') {
             return new JsonResponse(['error' => 'Informe uma URL HTTP ou HTTPS.'], 400);
         }
+        if (!is_int($maxPages) || $maxPages < 1 || $maxPages > 200) {
+            return new JsonResponse(['error' => 'O limite deve estar entre 1 e 200 páginas.'], 400);
+        }
 
         try {
-            $documents = $this->sources->importMany($this->currentUser(), $url, $followLinks);
+            $documents = $this->sources->importMany($this->currentUser(), $url, $followLinks, $maxPages);
         } catch (\InvalidArgumentException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], 400);
         } catch (DocumentNotFoundException $exception) {
