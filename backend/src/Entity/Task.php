@@ -9,6 +9,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'tasks')]
 class Task
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_COMPLETED = 'completed';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -19,6 +23,9 @@ class Task
 
     #[ORM\Column(type: 'text', nullable: true)]
     private $description;
+
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => self::STATUS_PENDING])]
+    private string $status = self::STATUS_PENDING;
 
     #[ORM\Column(name: 'created_at', type: 'datetime')]
     private $created_at;
@@ -67,6 +74,19 @@ class Task
         return $this;
     }
 
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        $this->updated_at = new \DateTime();
+
+        return $this;
+    }
+
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -96,6 +116,7 @@ class Task
             'user_id' => $this->user?->getId(),
             'title' => $this->title,
             'description' => $this->description,
+            'status' => $this->status,
             'created_at' => $this->created_at?->format(\DateTimeInterface::ATOM),
             'updated_at' => $this->updated_at?->format(\DateTimeInterface::ATOM),
         ];

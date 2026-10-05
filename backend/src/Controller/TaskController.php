@@ -93,6 +93,11 @@ class TaskController extends AbstractController
             throw new \InvalidArgumentException('Descrição inválida.');
         }
 
-        return new TaskData($payload['title'], $description);
+        $status = $payload['status'] ?? null;
+        if (array_key_exists('status', $payload) && !is_string($status)) {
+            throw new \InvalidArgumentException('Status inválido.');
+        }
+
+        return new TaskData($payload['title'], $description, $status);
     }
 }

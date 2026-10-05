@@ -77,5 +77,17 @@ class TaskService
 
         $task->setTitle($title);
         $task->setDescription($description);
+
+        if ($data->status !== null) {
+            $allowedStatuses = [
+                Task::STATUS_PENDING,
+                Task::STATUS_IN_PROGRESS,
+                Task::STATUS_COMPLETED,
+            ];
+            if (!in_array($data->status, $allowedStatuses, true)) {
+                throw new \InvalidArgumentException('Status inválido.');
+            }
+            $task->setStatus($data->status);
+        }
     }
 }

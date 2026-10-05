@@ -23,6 +23,7 @@ export class TaskComponent {
     this.store.dispatch(TaskActions.createTask({
       title: this.title.trim(),
       description: description === '' ? null : description,
+      status: 'pending',
     }));
     this.title = '';
     this.description = '';

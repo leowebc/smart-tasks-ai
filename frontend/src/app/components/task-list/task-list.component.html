@@ -1,7 +1,7 @@
 <section class="page tasks">
   <header class="page__head">
     <h1>Minhas tarefas</h1>
-    <p>Concluir uma tarefa não está disponível: a API não possui campo de status.</p>
+    <p>Organize e acompanhe suas tarefas em um só lugar.</p>
   </header>
 
   <section class="panel tasks__card">
@@ -17,6 +17,14 @@
       <label class="field">
         <span>Descrição</span>
         <textarea formControlName="description" rows="3" placeholder="Descrição opcional"></textarea>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select formControlName="status">
+          <option value="pending">Pendente</option>
+          <option value="in_progress">Em andamento</option>
+          <option value="completed">Concluída</option>
+        </select>
       </label>
       @if (formError()) {
         <p class="page__alert" role="alert">{{ formError() }}</p>
@@ -48,7 +56,12 @@
         @for (task of tasks(); track task.id) {
           <li class="task-list__item">
             <div class="task-list__body">
-              <h3>{{ task.title }}</h3>
+              <div class="task-list__heading">
+                <h3>{{ task.title }}</h3>
+                <span [class]="'status-badge status-badge--' + task.status">
+                  {{ statusLabels[task.status] }}
+                </span>
+              </div>
               <p>{{ task.description || 'Sem descrição' }}</p>
               <small>Criada em {{ formatDate(task.created_at) }} · Atualizada em {{ formatDate(task.updated_at) }}</small>
             </div>

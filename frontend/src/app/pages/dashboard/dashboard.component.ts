@@ -1,12 +1,17 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { QuickActionsComponent } from '../../layout/quick-actions.component';
 import { StatCardComponent } from '../../layout/stat-card.component';
 import { DocumentService } from '../../services/document.service';
 import * as TaskActions from '../../state/tasks/task.actions';
-import { TaskItem } from '../../state/tasks/task.model';
-import { selectTaskError, selectTasks, selectTasksLoaded } from '../../state/tasks/task.selectors';
+import { TASK_STATUS_LABELS } from '../../state/tasks/task.model';
+import {
+  selectTaskError,
+  selectTasks,
+  selectTasksLoaded,
+  selectTasksLoading,
+} from '../../state/tasks/task.selectors';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,13 +24,16 @@ export class DashboardComponent {
   private readonly documentService = inject(DocumentService);
   private readonly taskList = this.store.selectSignal(selectTasks);
   private readonly tasksLoaded = this.store.selectSignal(selectTasksLoaded);
-  private readonly taskError = this.store.selectSignal(selectTaskError);
   private documentsRequested = false;
 
-  readonly loading = signal(true);
-  readonly errorMessage = signal('');
-  readonly total = signal<number | null>(null);
-  readonly recent = signal<TaskItem[]>([]);
+  readonly statusLabels = TASK_STATUS_LABELS;
+  readonly loading = this.store.selectSignal(selectTasksLoading);
+  readonly errorMessage = this.store.selectSignal(selectTaskError);
+  readonly total = computed(() => this.taskList().length);
+  readonly pending = computed(() => this.countByStatus('pending'));
+  readonly inProgress = computed(() => this.countByStatus('in_progress'));
+  readonly completed = computed(() => this.countByStatus('completed'));
+  readonly recent = computed(() => this.taskList().slice(-5).reverse());
   readonly documentTotal = signal<number | null>(null);
   readonly documentHint = signal('Contagem da sua conta.');
 
@@ -36,13 +44,12 @@ export class DashboardComponent {
         return;
       }
       this.documentsRequested = true;
-      const items = this.taskList();
-      this.total.set(items.length);
-      this.recent.set(items.slice(-5).reverse());
-      this.loading.set(false);
-      this.errorMessage.set(this.taskError());
       this.loadDocuments();
     });
+  }
+
+  private countByStatus(status: 'pending' | 'in_progress' | 'completed'): number {
+    return this.taskList().filter((task) => task.status === status).length;
   }
 
   private loadDocuments(): void {

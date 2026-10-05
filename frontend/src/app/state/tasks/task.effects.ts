@@ -27,7 +27,7 @@ export class TaskEffects {
 
   createTask$ = createEffect(() => this.actions$.pipe(
     ofType(TaskActions.createTask),
-    exhaustMap(({ title, description }) => this.taskService.addTask(title, description).pipe(
+    exhaustMap(({ title, description, status }) => this.taskService.addTask(title, description, status).pipe(
       map(() => TaskActions.saveTaskSuccess()),
       catchError((error: HttpErrorResponse) => of(TaskActions.saveTaskFailure({
         error: this.saveError(error),
@@ -37,7 +37,7 @@ export class TaskEffects {
 
   updateTask$ = createEffect(() => this.actions$.pipe(
     ofType(TaskActions.updateTask),
-    exhaustMap(({ id, title, description }) => this.taskService.updateTask(id, title, description).pipe(
+    exhaustMap(({ id, title, description, status }) => this.taskService.updateTask(id, title, description, status).pipe(
       map(() => TaskActions.saveTaskSuccess()),
       catchError((error: HttpErrorResponse) => of(TaskActions.saveTaskFailure({
         error: this.saveError(error),

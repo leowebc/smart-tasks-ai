@@ -6,7 +6,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { DialogService } from '../../services/dialog.service';
 import * as TaskActions from '../../state/tasks/task.actions';
-import { TaskItem } from '../../state/tasks/task.model';
+import { TASK_STATUS_LABELS, TaskItem, TaskStatus } from '../../state/tasks/task.model';
 import {
   selectTaskError,
   selectTaskFormError,
@@ -31,8 +31,10 @@ export class TaskListComponent {
   readonly form = this.formBuilder.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
+    status: this.formBuilder.nonNullable.control<TaskStatus>('pending'),
   });
 
+  readonly statusLabels = TASK_STATUS_LABELS;
   readonly tasks = this.store.selectSignal(selectTasks);
   readonly loading = this.store.selectSignal(selectTasksLoading);
   readonly saving = this.store.selectSignal(selectTasksSaving);
@@ -62,13 +64,14 @@ export class TaskListComponent {
     this.form.setValue({
       title: task.title,
       description: task.description ?? '',
+      status: task.status,
     });
   }
 
   cancelEdit(): void {
     this.editingId.set(null);
     this.store.dispatch(TaskActions.clearTaskFeedback());
-    this.form.reset({ title: '', description: '' });
+    this.form.reset({ title: '', description: '', status: 'pending' });
   }
 
   save(): void {
@@ -83,10 +86,11 @@ export class TaskListComponent {
     const title = this.form.controls.title.value.trim();
     const description = this.form.controls.description.value.trim();
     const payloadDescription = description === '' ? null : description;
+    const status = this.form.controls.status.value;
     const editingId = this.editingId();
     this.store.dispatch(editingId === null
-      ? TaskActions.createTask({ title, description: payloadDescription })
-      : TaskActions.updateTask({ id: editingId, title, description: payloadDescription }));
+      ? TaskActions.createTask({ title, description: payloadDescription, status })
+      : TaskActions.updateTask({ id: editingId, title, description: payloadDescription, status }));
   }
 
   async remove(task: TaskItem): Promise<void> {
