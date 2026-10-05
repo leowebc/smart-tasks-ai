@@ -6,6 +6,17 @@ set -eu
 : "${JWT_PASSPHRASE:?Defina JWT_PASSPHRASE no ambiente do Render}"
 : "${OPENAI_API_KEY:?Defina OPENAI_API_KEY no ambiente do Render}"
 
+: "${MYSQL_SSL_CA_BASE64:?Defina MYSQL_SSL_CA_BASE64 no ambiente do Render}"
+
+MYSQL_SSL_CA=/var/www/html/config/ssl/aiven-ca.pem
+export MYSQL_SSL_CA
+
+install -d -m 755 -o www-data -g www-data "$(dirname "$MYSQL_SSL_CA")"
+umask 077
+printf '%s' "$MYSQL_SSL_CA_BASE64" | base64 -d > "$MYSQL_SSL_CA"
+chown www-data:www-data "$MYSQL_SSL_CA"
+chmod 644 "$MYSQL_SSL_CA"
+
 if [ -n "${JWT_PRIVATE_KEY_BASE64:-}" ] || [ -n "${JWT_PUBLIC_KEY_BASE64:-}" ]; then
     : "${JWT_PRIVATE_KEY_BASE64:?Defina as duas chaves JWT em Base64}"
     : "${JWT_PUBLIC_KEY_BASE64:?Defina as duas chaves JWT em Base64}"

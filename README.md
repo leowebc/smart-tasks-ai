@@ -177,6 +177,7 @@ Cadastre no painel do Render, sem salvar valores reais no repositório:
 
 - `APP_SECRET`;
 - `DATABASE_URL`, no formato `mysql://USUARIO:SENHA@HOST:3306/BANCO?serverVersion=8.0&charset=utf8mb4`;
+- `MYSQL_SSL_CA_BASE64`, com o certificado CA fornecido pela Aiven;
 - `JWT_PASSPHRASE`;
 - `JWT_PRIVATE_KEY_BASE64` e `JWT_PUBLIC_KEY_BASE64`;
 - `OPENAI_API_KEY`;
@@ -192,6 +193,16 @@ base64 -w 0 config/jwt/public.pem
 ```
 
 O entrypoint decodifica as chaves somente dentro do container. Também é possível usar arquivos secretos e sobrescrever `JWT_SECRET_KEY` e `JWT_PUBLIC_KEY` com seus caminhos absolutos. Não execute migrations automaticamente ao iniciar cada instância.
+
+Em produção, o Doctrine exige TLS com validação do certificado do servidor. O entrypoint decodifica `MYSQL_SSL_CA_BASE64` em `/var/www/html/config/ssl/ca.pem` e exporta esse caminho como `MYSQL_SSL_CA`. Como alternativa, monte o CA como arquivo secreto e informe seu caminho absoluto em `MYSQL_SSL_CA`.
+
+Para confirmar pelo próprio Symfony que a sessão MySQL usa TLS, execute no Shell do Web Service:
+
+```bash
+php bin/console doctrine:query:sql "SHOW SESSION STATUS LIKE 'Ssl_cipher'" --env=prod
+```
+
+O campo `Value` deve conter uma cifra TLS. Uma conexão com CA inválido ou certificado de servidor não verificável deve falhar antes da consulta.
 
 ### Frontend
 
@@ -251,6 +262,8 @@ Use `backend/.env.example` como modelo e mantenha os valores reais somente em `b
 - `JWT_PRIVATE_KEY_BASE64`: chave privada codificada para o container;
 - `JWT_PUBLIC_KEY_BASE64`: chave pública codificada para o container;
 - `DATABASE_URL`: conexão com o MySQL;
+- `MYSQL_SSL_CA`: caminho absoluto do certificado CA em produção;
+- `MYSQL_SSL_CA_BASE64`: certificado CA codificado para o container;
 - `OPENAI_API_KEY`: credencial usada por embeddings e chat;
 - `EMBEDDING_MODEL`: modelo de embeddings;
 - `CHAT_MODEL`: modelo de chat.

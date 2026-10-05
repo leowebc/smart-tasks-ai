@@ -7,7 +7,8 @@ ENV APP_ENV=prod \
     EMBEDDING_MODEL=text-embedding-3-small \
     CHAT_MODEL=gpt-4o-mini \
     JWT_SECRET_KEY=/var/www/html/config/jwt/private.pem \
-    JWT_PUBLIC_KEY=/var/www/html/config/jwt/public.pem
+    JWT_PUBLIC_KEY=/var/www/html/config/jwt/public.pem \
+    MYSQL_SSL_CA=/var/www/html/config/ssl/aiven-ca.pem
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -41,8 +42,8 @@ RUN composer dump-autoload \
     --classmap-authoritative \
     --no-interaction \
     --no-scripts \
-    && mkdir -p var/cache var/log config/jwt \
-    && chown -R www-data:www-data var config/jwt
+    && mkdir -p var/cache var/log config/jwt config/ssl \
+    && chown -R www-data:www-data var config/jwt config/ssl
 
 COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/render-entrypoint.sh /usr/local/bin/render-entrypoint

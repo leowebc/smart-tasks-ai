@@ -5,6 +5,7 @@
 auth.json
 composer.auth.json
 config/jwt/
+config/ssl/
 var/
 vendor/
 *.pem

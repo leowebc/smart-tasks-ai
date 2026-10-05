@@ -15,6 +15,7 @@ composer.auth.json
 *.pem
 *.key
 **/config/jwt/
+**/config/ssl/
 **/config/secrets/
 
 # Arquivos enviados nos testes
