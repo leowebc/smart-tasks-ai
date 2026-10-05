@@ -1,13 +1,22 @@
 # ADR-001 — Arquitetura
 
-Status: aceito como guia. Não autoriza implementação.
+**Status:** aceita
 
-Stack: PHP 8.1, Symfony 6, Doctrine, MySQL, JWT, Angular 17, Material, Reactive Forms e NgRx.
+## Contexto
 
-O backend separa controller, service, DTO e repository. O NgRx guarda sessão e tarefas. O guard protege a tela. A API exige JWT.
+O projeto precisa atender autenticação, tarefas e consulta a fontes privadas sem misturar regras de negócio com HTTP ou interface.
 
-A SPEC-001 corrige o `security.yaml` antes do cadastro. Ele usa chaves do Symfony 5, e o lock traz o security-bundle 6.4.9. O `POST /api/login` fica com um único tratamento.
+## Decisão
 
-Upload, scraping e resposta com contexto são as SPECs 004 a 006. Sem API, a tela fica vazia. A geração só roda com trechos dos documentos e URLs da própria conta.
+- Backend em PHP 8.1, Symfony 6, Doctrine e MySQL.
+- Frontend em Angular 17, Material e Reactive Forms.
+- API stateless protegida por JWT.
+- Controllers tratam HTTP; Services coordenam regras; Repositories acessam o banco.
+- NgRx gerencia o estado das tarefas. Os outros recursos usam serviços HTTP locais.
+- O RAG usa apenas fontes selecionadas e pertencentes ao usuário.
 
-Redis e RabbitMQ estão no Compose e ficam de fora. Chaves e `.env` não entram no Git.
+## Consequências
+
+A separação facilita testes e evolução, mas aumenta a quantidade de classes. A indexação permanece síncrona e a similaridade é calculada na aplicação; filas e banco vetorial ficam como opções para uma escala maior. Redis e RabbitMQ não fazem parte do fluxo atual.
+
+Chaves, certificados, credenciais, `.env` local e arquivos enviados não devem entrar no Git.

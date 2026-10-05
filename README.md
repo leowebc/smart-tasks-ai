@@ -4,6 +4,12 @@
 
 O Smart Tasks AI combina uma aplicação de tarefas com upload, Web Scraping sob demanda e chat RAG. Cada conta acessa somente suas próprias tarefas e fontes. O Chat responde com base nos trechos selecionados e não realiza pesquisa automática na internet.
 
+## Documentação
+
+- [Visão técnica](docs/VISAO-TECNICA.md)
+- [Decisão de arquitetura](docs/adr/ADR-001-ARQUITETURA.md)
+- [Especificações](docs/specs/)
+
 ## Tecnologias
 
 ### Backend
@@ -194,12 +200,12 @@ base64 -w 0 config/jwt/public.pem
 
 O entrypoint decodifica as chaves somente dentro do container. Também é possível usar arquivos secretos e sobrescrever `JWT_SECRET_KEY` e `JWT_PUBLIC_KEY` com seus caminhos absolutos. Não execute migrations automaticamente ao iniciar cada instância.
 
-Em produção, o Doctrine exige TLS com validação do certificado do servidor. O entrypoint decodifica `MYSQL_SSL_CA_BASE64` em `/var/www/html/config/ssl/ca.pem` e exporta esse caminho como `MYSQL_SSL_CA`. Como alternativa, monte o CA como arquivo secreto e informe seu caminho absoluto em `MYSQL_SSL_CA`.
+Em produção, o Doctrine exige TLS com validação do certificado do servidor. O entrypoint decodifica `MYSQL_SSL_CA_BASE64` em `/var/www/html/config/ssl/aiven-ca.pem` e exporta esse caminho como `MYSQL_SSL_CA`.
 
 Para confirmar pelo próprio Symfony que a sessão MySQL usa TLS, execute no Shell do Web Service:
 
 ```bash
-php bin/console doctrine:query:sql "SHOW SESSION STATUS LIKE 'Ssl_cipher'" --env=prod
+php bin/console dbal:run-sql "SHOW SESSION STATUS LIKE 'Ssl_cipher'" --env=prod
 ```
 
 O campo `Value` deve conter uma cifra TLS. Uma conexão com CA inválido ou certificado de servidor não verificável deve falhar antes da consulta.

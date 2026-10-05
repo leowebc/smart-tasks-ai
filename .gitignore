@@ -29,6 +29,7 @@ frontend/dist/
 frontend/.angular/
 frontend/coverage/
 frontend/tmp/
+docs/GUIA_ENTREVISTA.md
 *.log
 *.cache
 .phpunit.result.cache

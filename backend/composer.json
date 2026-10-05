@@ -36,6 +36,9 @@
     }
   },
   "config": {
+    "platform": {
+      "php": "8.1.0"
+    },
     "allow-plugins": {
       "symfony/flex": false,
       "symfony/runtime": true
