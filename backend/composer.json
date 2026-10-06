@@ -19,7 +19,10 @@
     "symfony/property-info": "^6.0",
     "symfony/runtime": "^6.4",
     "symfony/serializer": "^6.0",
-    "smalot/pdfparser": "^2.11"
+    "smalot/pdfparser": "^2.11",
+    "nelmio/api-doc-bundle": "^4.0",
+    "symfony/asset": "^6.0",
+    "symfony/twig-bundle": "^6.0"
   },
   "require-dev": {
     "symfony/maker-bundle": "^1.36"

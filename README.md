@@ -17,6 +17,7 @@ O Smart Tasks AI combina uma aplicação de tarefas com upload, Web Scraping sob
 - PHP 8.1 e Symfony 6;
 - Doctrine ORM, Doctrine Migrations e MySQL 8;
 - LexikJWTAuthenticationBundle para autenticação stateless;
+- NelmioApiDocBundle para a documentação Swagger/OpenAPI;
 - `smalot/pdfparser` para extração de PDFs;
 - API da OpenAI para embeddings e geração da resposta.
 
@@ -31,8 +32,8 @@ O Smart Tasks AI combina uma aplicação de tarefas com upload, Web Scraping sob
 ## Funcionalidades implementadas
 
 - cadastro e login com senha protegida e emissão de JWT;
-- rotas privadas no Angular e API protegida, exceto cadastro e login;
-- CRUD de tarefas isolado por usuário, com título obrigatório e descrição opcional;
+- rotas privadas no Angular e API protegida, exceto cadastro, login e documentação;
+- CRUD de tarefas isolado por usuário, com título obrigatório, descrição opcional e status;
 - dashboard e interface responsiva para tarefas;
 - upload de PDF e TXT, listagem, exclusão e reprocessamento de falhas;
 - extração, divisão em chunks, geração de embeddings e persistência no MySQL;
@@ -63,7 +64,7 @@ O backend separa Controllers, DTOs, Services, Repositories e Entities. Os Contro
 
 As entidades persistidas são `User`, `Task`, `Document`, `DocumentChunk` e `SourceImport`. Consultas e alterações sempre consideram o usuário autenticado. Recursos de outra conta são tratados como não encontrados.
 
-No frontend, o NgRx controla as tarefas. Autenticação, documentos, fontes e chat usam serviços HTTP específicos; o token fica no `localStorage` e é anexado pelo interceptor apenas às chamadas da API local.
+No frontend, o NgRx controla as tarefas. Autenticação, documentos, fontes e chat usam serviços HTTP específicos; o token fica no `localStorage` e é anexado pelo interceptor às chamadas da API.
 
 ## RAG fechado
 
@@ -146,7 +147,7 @@ mysql -u SEU_USUARIO -p -e "CREATE DATABASE task_app CHARACTER SET utf8mb4 COLLA
 mysql -u SEU_USUARIO -p task_app < database/task_app_ddl.sql
 ```
 
-Essa ordem foi validada em 02/10/2026 num banco temporário: as três migrations criaram `documents`, `document_chunks` e `source_imports` sobre `users` e `tasks`. O banco `task_app` local não foi alterado durante essa validação.
+Essa ordem foi validada em 02/10/2026 num banco temporário: as migrations de documentos e fontes criaram `documents`, `document_chunks` e `source_imports` sobre `users` e `tasks`. A migration de status foi adicionada depois. O banco `task_app` local não foi alterado durante a validação de 02/10/2026.
 
 ### Backend
 
@@ -227,6 +228,13 @@ npm run build
 
 Para um Static Site no Render, publique `frontend/dist/frontend/browser` e configure uma regra de rewrite de `/*` para `/index.html`, necessária para as rotas do Angular.
 
+## Ambiente de demonstração
+
+- Frontend: `https://smart-tasks-ai.onrender.com`
+- API e Swagger: `https://smart-tasks-ai-api.onrender.com/api/doc`
+
+O frontend precisa ser compilado com `API_URL=https://smart-tasks-ai-api.onrender.com/api`.
+
 ## SQL e Doctrine Migrations
 
 O arquivo `database/task_app_ddl.sql` cria as tabelas base:
@@ -237,8 +245,9 @@ O arquivo `database/task_app_ddl.sql` cria as tabelas base:
 As migrations devem ser aplicadas depois do DDL:
 
 - `Version20261002180000`: cria `documents` e `document_chunks`;
-- `Version20261002210000`: adiciona `source_url` aos documentos;
-- `Version20261002223000`: cria `source_imports` e relaciona suas páginas.
+- `Version20261002210000`: adiciona `source_url` em `documents`;
+- `Version20261002223000`: cria `source_imports` e relaciona páginas;
+- `Version20261005193000`: adiciona `status` em `tasks`.
 
 Na primeira preparação do MySQL remoto, aplique o DDL base uma única vez a partir da raiz do projeto:
 
@@ -277,9 +286,23 @@ Use `backend/.env.example` como modelo e mantenha os valores reais somente em `b
 
 Não versione `.env`, `.env.local`, chaves PEM, credenciais ou arquivos enviados.
 
+## Documentação da API
+
+A interface Swagger usa o NelmioApiDocBundle e o botão **Authorize** aceita o JWT, sem o prefixo `Bearer`.
+
+Documentação local:
+
+`http://127.0.0.1:9000/api/doc`
+
+Documentação de produção:
+
+`https://smart-tasks-ai-api.onrender.com/api/doc`
+
+A especificação OpenAPI correspondente fica em `/api/doc.json`. As rotas da documentação são públicas. Os endpoints de negócio, exceto cadastro e login, exigem `Authorization: Bearer <jwt>`.
+
 ## REST API
 
-`POST /api/register` e `POST /api/login` são públicos. Todos os demais endpoints exigem `Authorization: Bearer <jwt>`.
+`POST /api/register`, `POST /api/login`, `GET /api/doc` e `GET /api/doc.json` são públicos. Os demais endpoints exigem `Authorization: Bearer <jwt>`.
 
 ### Autenticação
 
@@ -290,7 +313,7 @@ Não versione `.env`, `.env.local`, chaves PEM, credenciais ou arquivos enviados
 
 - `GET /api/tasks` — lista as tarefas da conta;
 - `POST /api/tasks` — cria uma tarefa;
-- `PUT /api/tasks/{id}` — altera título e descrição;
+- `PUT /api/tasks/{id}` — altera título, descrição e status;
 - `DELETE /api/tasks/{id}` — exclui uma tarefa.
 
 ### Documentos
@@ -318,7 +341,7 @@ Não versione `.env`, `.env.local`, chaves PEM, credenciais ou arquivos enviados
 Os resultados detalhados estão em `docs/specs`.
 
 - `php bin/console lint:container`: concluído sem erros;
-- `php bin/console debug:router`: as 17 rotas sob `/api` foram carregadas;
+- `php bin/console debug:router`: as 17 rotas de negócio e as duas rotas da documentação foram carregadas;
 - `npm run build`: concluído; restaram avisos de orçamento de estilos e dependência CommonJS;
 - autenticação: login válido `200`, senha inválida `401` e rota protegida sem JWT `401`;
 - tarefas: CRUD exercitado com duas contas, incluindo isolamento, título inválido `400` e recurso alheio `404`;
@@ -337,7 +360,6 @@ Não há, neste repositório, uma suíte automatizada completa de integração d
 - PDFs digitalizados sem texto selecionável exigiriam OCR, que não foi implementado;
 - o build de produção precisa receber `API_URL` quando a API usar um domínio diferente do padrão;
 - o histórico do Chat não é persistido e se perde ao recarregar a aplicação;
-- tarefas não possuem estado de concluída porque o DDL original não inclui essa coluna;
 - as telas “Bases” e “Configurações” são placeholders;
 - Redis e RabbitMQ permanecem no Compose, mas não participam do fluxo da aplicação;
 - o Compose não entrega o frontend nem substitui o fluxo local validado;
