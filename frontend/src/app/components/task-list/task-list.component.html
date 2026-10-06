@@ -1,0 +1,77 @@
+<section class="page tasks">
+  <header class="page__head">
+    <h1>Minhas tarefas</h1>
+    <p>Organize e acompanhe suas tarefas em um só lugar.</p>
+  </header>
+
+  <section class="panel tasks__card">
+    <h2 class="tasks__title">{{ editingId() === null ? 'Nova tarefa' : 'Editar tarefa' }}</h2>
+    <form class="task-form" [formGroup]="form" (ngSubmit)="save()">
+      <label class="field">
+        <span>Título</span>
+        <input formControlName="title" maxlength="255" placeholder="Título da tarefa">
+        @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+          <small>Informe o título.</small>
+        }
+      </label>
+      <label class="field">
+        <span>Descrição</span>
+        <textarea formControlName="description" rows="3" placeholder="Descrição opcional"></textarea>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select formControlName="status">
+          <option value="pending">Pendente</option>
+          <option value="in_progress">Em andamento</option>
+          <option value="completed">Concluída</option>
+        </select>
+      </label>
+      @if (formError()) {
+        <p class="page__alert" role="alert">{{ formError() }}</p>
+      }
+      <div class="task-form__actions">
+        <button mat-flat-button class="task-form__submit" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Salvando...' : (editingId() === null ? 'Criar' : 'Salvar') }}
+        </button>
+        @if (editingId() !== null) {
+          <button mat-stroked-button class="task-form__cancel" type="button" (click)="cancelEdit()">Cancelar</button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <section class="panel tasks__card">
+    <h2 class="tasks__title">Lista</h2>
+    @if (loading()) {
+      <p class="page__status">Carregando tarefas...</p>
+    } @else if (errorMessage()) {
+      <p class="page__alert" role="alert">{{ errorMessage() }}</p>
+    } @else if (tasks().length === 0) {
+      <div class="task-empty">
+        <p>Nenhuma tarefa ainda.</p>
+        <span>Use o formulário acima para criar a primeira.</span>
+      </div>
+    } @else {
+      <ul class="task-list">
+        @for (task of tasks(); track task.id) {
+          <li class="task-list__item">
+            <div class="task-list__body">
+              <div class="task-list__heading">
+                <h3>{{ task.title }}</h3>
+                <span [class]="'status-badge status-badge--' + task.status">
+                  {{ statusLabels[task.status] }}
+                </span>
+              </div>
+              <p>{{ task.description || 'Sem descrição' }}</p>
+              <small>Criada em {{ formatDate(task.created_at) }} · Atualizada em {{ formatDate(task.updated_at) }}</small>
+            </div>
+            <div class="task-list__actions">
+              <button mat-stroked-button class="task-list__edit" type="button" (click)="edit(task)">Editar</button>
+              <button mat-stroked-button class="task-list__delete" type="button" (click)="remove(task)">Excluir</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>

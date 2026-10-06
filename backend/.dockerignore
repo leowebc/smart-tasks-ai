@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env*
+!.env.example
+auth.json
+composer.auth.json
+config/jwt/
+config/ssl/
+var/
+vendor/
+*.pem
+*.key
+*.log
+*.cache
+*.sql
+*.dump

@@ -1,0 +1,139 @@
+<section class="page scraping">
+  <header class="page__head">
+    <h1>Web Scraping</h1>
+    <p>Extraia o texto de uma página pública.</p>
+  </header>
+
+  <div class="scraping__grid">
+    <div class="scraping__main">
+      <section class="panel composer">
+        <h2>Adicionar URLs</h2>
+        <form (submit)="$event.preventDefault(); add()">
+          <label class="composer__field">
+            <span class="visually-hidden">URL</span>
+            <input
+              name="url"
+              type="url"
+              placeholder="https://exemplo.com"
+              [(ngModel)]="url"
+              [disabled]="running()"
+              autocomplete="off">
+            <button type="submit" [disabled]="running() || url.trim() === ''">Adicionar</button>
+          </label>
+        </form>
+        <p class="composer__hint">A importação segue links do mesmo domínio, processa até {{ maxPages }} páginas e grava tudo numa única fonte.</p>
+      </section>
+
+      @if (queue().length > 0) {
+        <section class="panel pending">
+          <div class="pending__head">
+            <h2>URLs para Processar ({{ queue().length }})</h2>
+            <button type="button" class="pending__clear" (click)="clearQueue()" [disabled]="running()">Limpar Tudo</button>
+          </div>
+          <ul>
+            @for (item of queue(); track item; let index = $index) {
+              <li>
+                <span class="pending__icon" aria-hidden="true">↗</span>
+                <span>{{ item }}</span>
+                <button type="button" (click)="removeQueued(index)" [disabled]="running()" [attr.aria-label]="'Remover ' + item">×</button>
+              </li>
+            }
+          </ul>
+          @if (running()) {
+            <button type="button" class="pending__wait" disabled>Processando...</button>
+          } @else {
+            <button type="button" class="pending__start" (click)="start()">Iniciar Scraping</button>
+          }
+        </section>
+      }
+
+      @if (running()) {
+        <section class="panel job">
+          <span class="job__badge" aria-hidden="true">↻</span>
+          <h2>Processando Scraping</h2>
+          <p class="job__line">[{{ currentIndex() + 1 }}/{{ queue().length }}] Lendo {{ currentUrl() }} ({{ elapsed() }}s)</p>
+          <p class="composer__hint">O percentual é estimado para até {{ maxPages }} páginas. A fonte aparecerá quando o servidor concluir.</p>
+          <div class="job__head">
+            <span>Progresso estimado</span>
+            <strong>{{ progress() }}%</strong>
+          </div>
+          <div class="job__track" role="progressbar" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100">
+            <span [style.width.%]="progress()"></span>
+          </div>
+        </section>
+      }
+
+      @if (errorMessage()) {
+        <p class="page__alert" role="alert">{{ errorMessage() }}</p>
+      }
+    </div>
+
+    <section class="panel extracted">
+      <h2>Dados extraídos ({{ groups().length + pages().length }})</h2>
+      @if (loading()) {
+        <p class="page__status">Carregando fontes...</p>
+      } @else if (groups().length === 0 && pages().length === 0) {
+        <p class="page__empty">Nenhuma página importada ainda.</p>
+      } @else {
+        <ul class="source-list">
+          @for (group of groups(); track group.id) {
+            <li class="source-list__item">
+              <span class="source-list__mark" aria-hidden="true">✓</span>
+              <div class="source-list__body">
+                <h3>{{ group.title }}</h3>
+                <p class="source-list__url">{{ group.root_url }}</p>
+                <small>{{ group.page_count }} páginas · {{ group.chunk_count }} trechos · {{ formatDate(group.created_at) }}</small>
+                <button type="button" class="source-list__toggle" (click)="toggleOpen(group.id)">
+                  {{ expanded(group.id) ? 'Ocultar páginas' : 'Ver páginas' }}
+                </button>
+                @if (expanded(group.id)) {
+                  <ul class="source-list source-list--nested">
+                    @for (source of group.pages; track source.id) {
+                      <li>
+                        <strong>{{ source.original_name }}</strong>
+                        <p class="source-list__url">{{ source.source_url }}</p>
+                        <small>{{ source.chunk_count }} trechos</small>
+                        <button type="button" class="is-danger" (click)="remove(source)" [disabled]="running()">Excluir página</button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+              <div class="source-list__side">
+                <a [href]="group.root_url" target="_blank" rel="noopener noreferrer">Abrir link</a>
+                <button type="button" class="is-danger" (click)="removeGroup(group)" [disabled]="running()">Excluir</button>
+              </div>
+            </li>
+          }
+          @for (source of pages(); track source.id) {
+            <li class="source-list__item">
+              <span class="source-list__mark" [class]="'source-list__mark--' + source.status" aria-hidden="true">
+                {{ source.status === 'failed' ? '!' : '✓' }}
+              </span>
+              <div class="source-list__body">
+                <h3>{{ source.original_name }}</h3>
+                @if (source.source_url) {
+                  <p class="source-list__url">{{ source.source_url }}</p>
+                }
+                <small>1 página · {{ source.chunk_count }} trechos · {{ formatDate(source.created_at) }}</small>
+                @if (source.error_message) {
+                  <small class="source-list__error">{{ source.error_message }}</small>
+                }
+              </div>
+              <div class="source-list__side">
+                <p [class]="'source-status source-status--' + source.status">{{ statusLabel(source.status) }}</p>
+                @if (source.source_url) {
+                  <a [href]="source.source_url" target="_blank" rel="noopener noreferrer">Abrir link</a>
+                }
+                @if (source.status === 'failed') {
+                  <button type="button" (click)="retry(source)" [disabled]="running()">Tentar de novo</button>
+                }
+                <button type="button" class="is-danger" (click)="remove(source)" [disabled]="running()">Excluir</button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</section>

@@ -1,0 +1,14 @@
+---
+description: Consultar a SPEC aprovada antes de alterar o Smart Tasks AI.
+alwaysApply: true
+---
+
+# Smart Tasks AI
+
+- Consulte a SPEC em `docs/specs` antes de implementar.
+- Preserve PHP 8.1, Symfony 6, Doctrine, MySQL, JWT, Angular 17, Material, Reactive Forms e NgRx.
+- Aplique SOLID e um padrão só quando houver necessidade real.
+- Explique cada alteração em poucas linhas, em português.
+- Execute os testes da SPEC antes de declarar a entrega concluída.
+- Aguarde autorização antes de avançar para outra SPEC.
+- Não versione credenciais, chaves JWT nem `.env` local.

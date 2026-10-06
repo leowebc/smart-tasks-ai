@@ -1,0 +1,58 @@
+<section class="page">
+  <header class="page__head">
+    <h1>Dashboard</h1>
+    <p>Resumo das suas tarefas.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="page__status">Carregando tarefas...</p>
+  } @else if (errorMessage()) {
+    <p class="page__alert" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <div class="stats">
+    <app-stat-card
+      label="Total de tarefas"
+      [value]="total()"
+      [hint]="errorMessage() ? 'A consulta falhou.' : 'Contagem da sua conta.'" />
+    <app-stat-card
+      label="Pendentes"
+      [value]="pending()"
+      hint="Tarefas aguardando início." />
+    <app-stat-card
+      label="Em andamento"
+      [value]="inProgress()"
+      hint="Tarefas em execução." />
+    <app-stat-card
+      label="Concluídas"
+      [value]="completed()"
+      hint="Tarefas finalizadas." />
+    <app-stat-card
+      label="Documentos enviados"
+      [value]="documentTotal() === null ? '—' : documentTotal()"
+      [hint]="documentHint()" />
+  </div>
+
+  <div class="page__split">
+    <section class="panel">
+      <h2>Minhas tarefas recentes</h2>
+      @if (!loading() && !errorMessage() && recent().length === 0) {
+        <p class="page__empty">Nenhuma tarefa ainda.</p>
+      }
+      <ul class="task-preview">
+        @for (task of recent(); track task.id) {
+          <li>
+            <div>
+              <a [routerLink]="['/tasks']">{{ task.title }}</a>
+              <span>{{ task.description || 'Sem descrição' }}</span>
+            </div>
+            <span [class]="'status-badge status-badge--' + task.status">
+              {{ statusLabels[task.status] }}
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+    <app-quick-actions />
+  </div>
+</section>

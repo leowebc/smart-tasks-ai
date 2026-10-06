@@ -1,0 +1,13 @@
+<section class="panel">
+  <h2>Ações rápidas</h2>
+  <div class="quick-actions">
+    @for (action of actions; track action.link) {
+      <a class="quick-actions__item" [routerLink]="action.link" [class.quick-actions__item--muted]="!action.available">
+        <span>{{ action.label }}</span>
+        @if (!action.available) {
+          <small>Indisponível</small>
+        }
+      </a>
+    }
+  </div>
+</section>

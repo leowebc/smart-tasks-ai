@@ -1,0 +1,11 @@
+<article class="stat-card">
+  <p class="stat-card__label">{{ label() }}</p>
+  @if (unavailable()) {
+    <p class="stat-card__value stat-card__value--muted">Indisponível</p>
+  } @else {
+    <p class="stat-card__value">{{ value() }}</p>
+  }
+  @if (hint()) {
+    <p class="stat-card__hint">{{ hint() }}</p>
+  }
+</article>

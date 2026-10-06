@@ -1,0 +1,220 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  overflow: auto;
+}
+
+.login {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  min-height: 100%;
+  padding: 32px 16px;
+  color: #f8f7ff;
+  background:
+    radial-gradient(ellipse 48% 24% at 50% 0%, rgba(192, 132, 252, 0.55), transparent 70%),
+    radial-gradient(circle at 50% 18%, rgba(124, 58, 237, 0.45), transparent 36%),
+    linear-gradient(180deg, #6d28d9 0%, #5b21b6 46%, #4c1d95 100%);
+}
+
+.glow,
+.orb {
+  position: absolute;
+  pointer-events: none;
+}
+
+.glow {
+  top: 8%;
+  left: 50%;
+  width: 280px;
+  height: 90px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(216, 180, 254, 0.35);
+  filter: blur(28px);
+}
+
+.orb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(192, 132, 252, 0.85);
+  filter: blur(1px);
+}
+
+.orb-left { left: 8%; bottom: 18%; opacity: 0.7; }
+.orb-right { right: 11%; top: 22%; width: 10px; height: 10px; opacity: 0.55; }
+
+.brand,
+.card,
+.legal { position: relative; z-index: 1; }
+
+.brand { text-align: center; }
+
+.logo {
+  display: block;
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  object-fit: contain;
+  box-shadow: 0 12px 32px rgba(76, 29, 149, 0.45);
+}
+
+.product {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+h1 {
+  margin: 10px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+}
+
+.card {
+  width: min(100%, 400px);
+  padding: 26px 22px 22px;
+  border-radius: 18px;
+  background: #1c2030;
+  box-shadow: 0 18px 50px rgba(30, 10, 60, 0.35);
+}
+
+.label {
+  display: block;
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.field { width: 100%; margin-bottom: 14px; }
+
+.prefix,
+.toggle {
+  display: inline-flex;
+  color: #9aa3b8;
+}
+
+.toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.alert {
+  margin: 0 0 12px;
+  color: #fca5a5;
+  font-size: 13px;
+  text-align: left;
+}
+
+button.submit.mat-mdc-unelevated-button {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  background-color: transparent;
+  background-image: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #3b82f6 100%);
+}
+
+.submit svg { margin-right: 8px; }
+
+.submit:disabled { opacity: 0.65; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 14px;
+  color: #9aa3b8;
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.register {
+  margin: 0;
+  color: #d5d8e6;
+  font-size: 14px;
+  text-align: center;
+}
+
+.register a {
+  font-weight: 700;
+  text-decoration: none;
+  background: linear-gradient(90deg, #e879f9, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.legal {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+:host ::ng-deep .field {
+  --mdc-filled-text-field-container-color: #2b3144;
+  --mdc-filled-text-field-container-shape: 12px;
+  --mdc-filled-text-field-input-text-color: #f8fafc;
+  --mdc-filled-text-field-input-text-placeholder-color: #8b93a7;
+  --mdc-filled-text-field-caret-color: #ddd6fe;
+  --mdc-filled-text-field-focus-active-indicator-color: transparent;
+  --mdc-filled-text-field-active-indicator-height: 0;
+  --mdc-filled-text-field-focus-active-indicator-height: 0;
+  --mdc-filled-text-field-hover-active-indicator-color: transparent;
+
+  .mdc-text-field--filled {
+    border-radius: 12px;
+    background: #2b3144;
+  }
+
+  .mdc-line-ripple,
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before,
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::after {
+    display: none;
+  }
+
+  .mat-mdc-form-field-focus-overlay { background: transparent; }
+
+  .mat-mdc-form-field-infix {
+    min-height: 48px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .mat-mdc-form-field-icon-prefix,
+  .mat-mdc-form-field-icon-suffix { padding: 0 4px; }
+}
+
+@media (max-width: 480px) {
+  .product { font-size: 26px; }
+  .card { padding: 22px 16px 18px; }
+}
